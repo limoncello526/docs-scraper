@@ -1,4 +1,6 @@
 import asyncio
+import datetime
+import os
 
 from crawl4ai import AsyncWebCrawler, CacheMode, CrawlerRunConfig, LXMLWebScrapingStrategy, \
     FilterChain, DomainFilter, BestFirstCrawlingStrategy
@@ -52,6 +54,11 @@ async def scrape_page(start_url):
 
         if all_markdown:
             print(all_markdown)
+            os.makedirs("markdown_files", exist_ok=True)
+            filename = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            relative_path = f"markdown_files/docs-{filename}.md"
+            with open(relative_path, "w", encoding="utf-8") as file:
+                file.write(all_markdown)
         else:
             print("Failed to scrape any pages.")
 
