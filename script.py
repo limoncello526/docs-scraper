@@ -20,7 +20,7 @@ async def scrape_page(start_url):
     config = CrawlerRunConfig(
         markdown_generator=DefaultMarkdownGenerator(),
         deep_crawl_strategy=BestFirstCrawlingStrategy(
-            max_depth=100000,
+            max_depth=100,
             filter_chain=filter_chain,
             include_external=False,
         ),
