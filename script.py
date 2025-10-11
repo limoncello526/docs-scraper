@@ -12,7 +12,7 @@ async def scrape_page(start_url):
     filter_chain = FilterChain([
         # Only crawl specific domains
         DomainFilter(
-            allowed_domains=["docs.healthsafepay.com"],
+            allowed_domains=["docs.healthsafepay.com", "developers.healthsafepay.com"],
             blocked_domains=["dev-wallet.healthsafepay.com", "stg-wallet.healthsafepay.com", "wallet.healthsafepay.com",
                              "walletstage.healthsafepay.com", "walletprod.healthsafepay.com"]
         )
@@ -35,7 +35,7 @@ async def scrape_page(start_url):
     async with AsyncWebCrawler(config=browser_cfg, verbose=True) as crawler:
         results = await crawler.arun(
             url=start_url,
-            session_id="site_crawl_session",
+            session_id=f"site_crawl_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}",
             config=config,
             cache_mode=CacheMode.BYPASS
         )
@@ -62,5 +62,30 @@ async def scrape_page(start_url):
         else:
             print("Failed to scrape any pages.")
 
+def load_and_split_markdown_files():
+    from langchain.document_loaders import UnstructuredMarkdownLoader
+    from langchain.text_splitter import MarkdownHeaderTextSplitter
+    import glob
+    import os
+
+    md_folder = os.path.join(os.path.dirname(__file__), "markdown_files")
+    md_files = glob.glob(os.path.join(md_folder, "*.md"))
+
+    header_splitter = MarkdownHeaderTextSplitter(
+        headers_to_split_on=[("#", "Header 1"), ("##", "Header 2")]
+    )
+
+    for md_file in md_files:
+        print(f"Processing: {md_file}")
+        loader = UnstructuredMarkdownLoader(md_file)
+        docs = loader.load()
+        for doc in docs:
+            chunks = header_splitter.split_text(doc.page_content)
+            for i, chunk in enumerate(chunks):
+                print(f"Chunk {i+1} from {md_file}:")
+                print(chunk)
+                print("-"*40)
+
 if __name__ == '__main__':
-    asyncio.run(scrape_page("https://docs.healthsafepay.com"))
+    asyncio.run(scrape_page("https://developers.healthsafepay.com"))
+    load_and_split_markdown_files()
